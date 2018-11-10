@@ -8,6 +8,7 @@ from __future__ import unicode_literals
 
 import numpy as np
 
+
 class Sigmoid():
     def __init__(self):
         self.bottom = None
@@ -16,16 +17,16 @@ class Sigmoid():
 
         self.top = None
         self.top_grad = None
-        
+
         self.param = []
         self.param_grad = []
-    
+
     def forward(self, bottom):
         self.bottom = bottom
         assert len(self.bottom) == 1
         self.top = [1.0 / (1 + np.exp(-self.bottom[0]))]
         return self.top
-    
+
     def backward(self, top_grad):
         self.top_grad = top_grad
         assert len(self.top_grad) == 1

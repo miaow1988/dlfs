@@ -8,6 +8,7 @@ from __future__ import unicode_literals
 
 import numpy as np
 
+
 class CrossEntropyLoss():
     def __init__(self):
         self.bottom = None
@@ -16,10 +17,10 @@ class CrossEntropyLoss():
 
         self.top = None
         self.top_grad = None
-        
+
         self.param = []
         self.param_grad = []
-    
+
     def forward(self, bottom):
         self.bottom = bottom
         assert len(self.bottom) == 2
@@ -32,7 +33,7 @@ class CrossEntropyLoss():
         loss = -loss.mean()
         self.top = [loss]
         return self.top
-    
+
     def backward(self, top_grad):
         self.top_grad = top_grad
         assert len(self.top_grad) == 0

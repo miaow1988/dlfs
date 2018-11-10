@@ -14,7 +14,9 @@ import numpy as np
 
 
 def init_logging(path=None, level=logging.INFO):
-    formatter = logging.Formatter('[%(levelname)s] [%(asctime)s] %(message)s', '%Y-%m-%d %H:%M:%S')
+    formatter = logging.Formatter(
+        '[%(levelname)s] [%(asctime)s] %(message)s',
+        '%Y-%m-%d %H:%M:%S')
     logger = logging.getLogger()
     logger.setLevel(level)
 

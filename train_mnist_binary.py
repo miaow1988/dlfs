@@ -6,12 +6,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import os
-import gzip
 import argparse
 import logging
-
-import numpy as np
 
 import dlfs
 import dlfs.layers as L
@@ -54,7 +50,8 @@ if __name__ == '__main__':
         acc = ((x[0] > 0.5) == label).mean()
         meter_acc.update(acc)
         if global_iter % 100 == 0:
-            logging.info('iter=%d loss=%.3f acc=%.3f' % (global_iter, meter_loss(), meter_acc()))
+            logging.info('iter=%d loss=%.3f acc=%.3f' %
+                         (global_iter, meter_loss(), meter_acc()))
 
         # backward
         logging.debug('backward')
@@ -68,4 +65,3 @@ if __name__ == '__main__':
         for layer in net:
             for i, p in enumerate(layer.param):
                 p[...] = p - lr * layer.param_grad[i]
-

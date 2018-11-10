@@ -8,12 +8,13 @@ from __future__ import unicode_literals
 
 import numpy as np
 
+
 class Linear():
     def __init__(self, num_input, num_output):
         self.bottom = None
         self.bottom_grad = None
         self.propagation = [True]
-        
+
         self.top = None
         self.top_grad = None
 
@@ -21,7 +22,7 @@ class Linear():
         bias = np.zeros(num_output)
         self.param = [weight, bias]
         self.param_grad = None
-    
+
     def forward(self, bottom):
         self.bottom = bottom
         assert len(self.bottom) == 1
@@ -32,7 +33,7 @@ class Linear():
         y = x.dot(weight.T) + bias
         self.top = [y]
         return self.top
-    
+
     def backward(self, top_grad):
         self.top_grad = top_grad
         assert len(self.top_grad) == 1
