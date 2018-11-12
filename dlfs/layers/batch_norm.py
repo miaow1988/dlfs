@@ -21,10 +21,10 @@ class BatchNorm():
         weight = np.ones(num_channel)
         bias = np.zeros(num_channel)
         self.param = [weight, bias]
-        self.param_grad = None
+        self.param_grad = [np.zeros(p.shape) for p in self.param]
 
         mean = np.zeros(num_channel)
-        var = np.random.rand(num_channel)
+        var = np.ones(num_channel)
         self.aux_param = [mean, var]
 
         self.num_channel = num_channel
@@ -45,6 +45,7 @@ class BatchNorm():
         if self.is_train:
             mean[...] = 0.999 * mean + 0.001 * x.mean(axis=(0, 2, 3))
             var[...] = 0.999 * var + 0.001 * x.var(axis=(0, 2, 3))
+        # print(np.abs(mean).mean(), np.abs(var).mean())
         x = (x - mean.reshape(1, -1, 1, 1)) / np.sqrt(var + self.epsilon).reshape(1, -1, 1, 1)
         x = x * weight.reshape(1, -1, 1, 1) + bias.reshape(1, -1, 1, 1)
         x = x.reshape(x_shape)
@@ -59,6 +60,7 @@ class BatchNorm():
         x = self.bottom[0]
         assert x.shape[1] == self.num_channel
         weight, bias = self.param
+        weight_grad, bias_grad = self.param_grad
         mean, var = self.aux_param
 
         x_shape = x.shape
@@ -66,9 +68,8 @@ class BatchNorm():
         x = x.reshape(shape)
         x = (x - mean.reshape(1, -1, 1, 1)) / np.sqrt(var + self.epsilon).reshape(1, -1, 1, 1)
         y_grad = y_grad.reshape(shape)
-        weight_grad = (y_grad * x).sum(axis=(0, 2, 3))
-        bias_grad = y_grad.sum(axis=(0, 2, 3))
-        self.param_grad = [weight_grad, bias_grad]
+        weight_grad[...] = (y_grad * x).sum(axis=(0, 2, 3))
+        bias_grad[...] = y_grad.sum(axis=(0, 2, 3))
 
         x_grad = y_grad * weight.reshape(1, -1, 1, 1)
         x_grad = x_grad / np.sqrt(var + self.epsilon).reshape(1, -1, 1, 1)

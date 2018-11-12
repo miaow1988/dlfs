@@ -21,7 +21,7 @@ class Linear():
         weight = np.random.randn(num_output, num_input) / num_input * 2
         bias = np.zeros(num_output)
         self.param = [weight, bias]
-        self.param_grad = None
+        self.param_grad = [np.zeros(p.shape) for p in self.param]
 
     def forward(self, bottom):
         self.bottom = bottom
@@ -42,10 +42,10 @@ class Linear():
         x = self.bottom[0]
         assert len(x.shape) == 2
         weight, bias = self.param
+        weight_grad, bias_grad = self.param_grad
 
-        weight_grad = y_grad.T.dot(x)
-        bias_grad = y_grad.sum(0)
-        self.param_grad = [weight_grad, bias_grad]
+        weight_grad[...] = y_grad.T.dot(x)
+        bias_grad[...] = y_grad.sum(0)
         x_grad = y_grad.dot(weight)
         self.bottom_grad = [x_grad]
         return self.bottom_grad

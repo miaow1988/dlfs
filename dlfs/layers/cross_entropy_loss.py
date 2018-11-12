@@ -19,7 +19,7 @@ class CrossEntropyLoss():
         self.top_grad = None
 
         self.param = []
-        self.param_grad = []
+        self.param_grad = [np.zeros(p.shape) for p in self.param]
 
     def forward(self, bottom):
         self.bottom = bottom

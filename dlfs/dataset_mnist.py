@@ -59,6 +59,6 @@ class DatasetMNIST():
             len(self.data), size=self.batch_size, replace=False)
         x = self.data[idx]
         x = (x - self.mean) / (self.std + 1e-6)
-        x *= 255
+        # x *= 255
         y = self.label[idx]
         return x, y

@@ -20,7 +20,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int, default=128)
     args = parser.parse_args()
 
-    dlfs.utils.init_logging(level=logging.INFO)
+    dlfs.utils.init_logging(path='log.txt', level=logging.INFO)
 
     mnist = dlfs.DatasetMNIST(args.batch_size, 'data/mnist')
 
@@ -40,6 +40,16 @@ if __name__ == '__main__':
         L.Linear(128, 10),
     )
     net_loss = L.SoftmaxLoss()
+
+    # parameters
+    parameters = []
+    parameters_grad = []
+    parameters_velocity = []
+    for layer in net:
+        for i, p in enumerate(layer.param):
+            parameters.append(p)
+            parameters_grad.append(layer.param_grad[i])
+            parameters_velocity.append(np.zeros(p.shape))
 
     # train
     for global_iter, (data, label) in enumerate(mnist):
@@ -66,9 +76,11 @@ if __name__ == '__main__':
             logging.debug(grad_x[0].shape)
 
         # update
-        lr = 0.01
-        for layer in net:
-            if global_iter > 2000:
-                lr *= 0.1
-            for i, p in enumerate(layer.param):
-                p[...] = p - lr * layer.param_grad[i]
+        lr = 0.001
+        wd = 0.0001
+        momentum = 0.9
+        for i, p in enumerate(parameters):
+            p_grad = parameters_grad[i] + wd * p
+            p_velocity = parameters_velocity[i]
+            p_velocity[...] = momentum * p_velocity + (1 - momentum) * p_grad
+            p[...] = p - lr * p_velocity
