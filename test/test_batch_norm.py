@@ -17,6 +17,11 @@ from dlfs.layers import check_bottom_gradient
 
 class TestBatchNorm(unittest.TestCase):
     layer = dlfs.layers.BatchNorm(num_channel=3)
+    layer.is_train = False
+    for p in layer.param:
+        p[...] = np.random.rand(*p.shape)
+    for p in layer.aux_param:
+        p[...] = np.random.rand(*p.shape)
     bottom = [np.random.randn(8, 3)]
     top = layer.forward(bottom)
     top_grad = [np.ones(t.shape) for t in top]
