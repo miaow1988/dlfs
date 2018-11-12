@@ -29,10 +29,13 @@ if __name__ == '__main__':
 
     net = (
         L.Linear(28*28, 256),
+        L.BatchNorm(256),
         L.ReLU(),
         L.Linear(256, 256),
+        L.BatchNorm(256),
         L.ReLU(),
         L.Linear(256, 128),
+        L.BatchNorm(128),
         L.ReLU(),
         L.Linear(128, 10),
     )
