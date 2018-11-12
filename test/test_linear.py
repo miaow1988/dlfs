@@ -17,6 +17,8 @@ from dlfs.layers import check_bottom_gradient
 
 class TestLinear(unittest.TestCase):
     layer = dlfs.layers.Linear(num_input=3, num_output=4)
+    for p in layer.param:
+        p[...] = np.random.rand(*p.shape)
     bottom = [np.random.randn(2, 3)]
     top = layer.forward(bottom)
     top_grad = [np.ones(t.shape) for t in top]
