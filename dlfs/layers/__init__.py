@@ -2,6 +2,7 @@ from .gradient_check import check_parameter_gradient
 from .gradient_check import check_bottom_gradient
 
 from .linear import Linear
+from .conv import Conv
 
 from .batch_norm import BatchNorm
 

@@ -29,6 +29,7 @@ class Linear():
         x = self.bottom[0]
         assert len(x.shape) == 2
         weight, bias = self.param
+        assert weight.shape[1] == x.shape[1]
 
         y = x.dot(weight.T) + bias
         self.top = [y]
