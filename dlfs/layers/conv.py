@@ -6,6 +6,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import itertools
+
 import numpy as np
 import skimage.util
 
@@ -56,9 +58,10 @@ class Conv():
         weight, bias = self.param
         weight_grad, bias_grad = self.param_grad
 
+        # import ipdb; ipdb.set_trace()
         x = np.pad(x, ((0, 0), (0, 0), (self.padding, self.padding), (self.padding, self.padding)), mode='constant')
-        batch_size, num_input, input_h, input_w = x.shape
-        x_blocks = skimage.util.view_as_windows(x, (batch_size, num_input, self.kernel_size, self.kernel_size), (1, 1, self.stride, self.stride))
+        batch_size = x.shape[0]
+        x_blocks = skimage.util.view_as_windows(x, (batch_size, self.num_input, self.kernel_size, self.kernel_size), (1, 1, self.stride, self.stride))
         output_h, output_w = x_blocks.shape[2], x_blocks.shape[3]
         x_blocks = x_blocks.reshape(output_h, output_w, batch_size, -1)
 
@@ -67,12 +70,24 @@ class Conv():
         weight_grad[...] = y_grad_blocks.T.dot(x_blocks).reshape(weight.shape)
         bias_grad[...] = y_grad_blocks.sum(0)
 
-        y_grad = np.pad(y_grad, ((0, 0), (0, 0), (self.padding, self.padding), (self.padding, self.padding)), mode='constant')
-        y_grad_blocks = skimage.util.view_as_windows(y_grad, (batch_size, self.num_output, self.kernel_size, self.kernel_size), (1, 1, self.stride, self.stride))
-        output_h, output_w = y_grad_blocks.shape[2], y_grad_blocks.shape[3]
-        y_grad_blocks = y_grad_blocks.reshape(output_h, output_w, batch_size, -1)
-        x_grad = y_grad_blocks.dot(np.flip(weight, axis=(2, 3)).transpose((1, 0, 2, 3)).reshape(self.num_input, -1).T)
-        x_grad = x_grad.transpose((2, 3, 0, 1))
+        t = y_grad_blocks.dot(weight.reshape(self.num_output, -1))
+        t = t.reshape(batch_size, output_h, output_w, self.num_input, self.kernel_size, self.kernel_size)
+        x_grad = np.zeros(x.shape)
+        for i, j in itertools.product(range(output_h), range(output_w)):
+            i0 = i * self.stride
+            i1 = i0 + self.kernel_size
+            j0 = j * self.stride
+            j1 = j0 + self.kernel_size
+            x_grad[:, :, i0:i1, j0:j1] += t[:, i, j, :, :, :]
+        if self.padding > 0:
+            x_grad = x_grad[:, :, self.padding:-self.padding, self.padding:-self.padding]
+
+        # y_grad = np.pad(y_grad, ((0, 0), (0, 0), (self.padding, self.padding), (self.padding, self.padding)), mode='constant')
+        # y_grad_blocks = skimage.util.view_as_windows(y_grad, (batch_size, self.num_output, self.kernel_size, self.kernel_size), (1, 1, 1, 1))
+        # output_h, output_w = y_grad_blocks.shape[2], y_grad_blocks.shape[3]
+        # y_grad_blocks = y_grad_blocks.reshape(output_h, output_w, batch_size, -1)
+        # x_grad = y_grad_blocks.dot(np.flip(weight, axis=(2, 3)).transpose((1, 0, 2, 3)).reshape(self.num_input, -1).T)
+        # x_grad = x_grad.transpose((2, 3, 0, 1))
         
         self.bottom_grad = [x_grad]
         return self.bottom_grad
