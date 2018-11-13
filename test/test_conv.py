@@ -16,7 +16,7 @@ from dlfs.layers import check_bottom_gradient
 
 
 class TestConv(unittest.TestCase):
-    layer = dlfs.layers.Conv(num_input=3, num_output=4, kernel_size=3, stride=1, padding=1)
+    layer = dlfs.layers.Conv(num_input=3, num_output=4, kernel_size=3, stride=2, padding=1)
     for p in layer.param:
         p[...] = np.random.rand(*p.shape)
     bottom = [np.random.randn(2, 3, 7, 7)]

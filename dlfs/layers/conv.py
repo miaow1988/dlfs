@@ -6,10 +6,31 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import numbers
 import itertools
 
 import numpy as np
-import skimage.util
+
+
+def view_as_windows(arr_in, window_shape, step=1):
+    arr_shape = np.array(arr_in.shape)
+    window_shape = np.array(window_shape, dtype=arr_shape.dtype)
+
+    arr_in = np.ascontiguousarray(arr_in)
+
+    slices = tuple(slice(None, None, st) for st in step)
+    window_strides = np.array(arr_in.strides)
+
+    indexing_strides = arr_in[slices].strides
+
+    win_indices_shape = (((np.array(arr_in.shape) - np.array(window_shape))
+                          // np.array(step)) + 1)
+
+    new_shape = tuple(list(win_indices_shape) + list(window_shape))
+    strides = tuple(list(indexing_strides) + list(window_strides))
+
+    arr_out = np.lib.stride_tricks.as_strided(arr_in, shape=new_shape, strides=strides)
+    return arr_out
 
 
 class Conv():
@@ -36,12 +57,12 @@ class Conv():
         self.bottom = bottom
         assert len(self.bottom) == 1
         x = self.bottom[0]
-        assert len(x.shape) == 4
+        assert x.ndim == 4
         weight, bias = self.param
         assert weight.shape[1] == x.shape[1]
 
         x = np.pad(x, ((0, 0), (0, 0), (self.padding, self.padding), (self.padding, self.padding)), mode='constant')
-        x_blocks = skimage.util.view_as_windows(x, (x.shape[0], x.shape[1], self.kernel_size, self.kernel_size), (1, 1, self.stride, self.stride))
+        x_blocks = view_as_windows(x, (x.shape[0], x.shape[1], self.kernel_size, self.kernel_size), (1, 1, self.stride, self.stride))
         x_blocks = x_blocks.reshape(x_blocks.shape[2], x_blocks.shape[3], x_blocks.shape[4], -1)
         y = x_blocks.dot(weight.reshape(self.num_output, -1).T) + bias.reshape(1, 1, 1, self.num_output)
         y = y.transpose((2, 3, 0, 1))
@@ -61,7 +82,7 @@ class Conv():
         # import ipdb; ipdb.set_trace()
         x = np.pad(x, ((0, 0), (0, 0), (self.padding, self.padding), (self.padding, self.padding)), mode='constant')
         batch_size = x.shape[0]
-        x_blocks = skimage.util.view_as_windows(x, (batch_size, self.num_input, self.kernel_size, self.kernel_size), (1, 1, self.stride, self.stride))
+        x_blocks = view_as_windows(x, (batch_size, self.num_input, self.kernel_size, self.kernel_size), (1, 1, self.stride, self.stride))
         output_h, output_w = x_blocks.shape[2], x_blocks.shape[3]
         x_blocks = x_blocks.reshape(output_h, output_w, batch_size, -1)
 
