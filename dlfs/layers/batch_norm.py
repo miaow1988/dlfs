@@ -46,7 +46,8 @@ class BatchNorm():
             mean[...] = 0.999 * mean + 0.001 * x.mean(axis=(0, 2, 3))
             var[...] = 0.999 * var + 0.001 * x.var(axis=(0, 2, 3))
         # print(np.abs(mean).mean(), np.abs(var).mean())
-        x = (x - mean.reshape(1, -1, 1, 1)) / np.sqrt(var + self.epsilon).reshape(1, -1, 1, 1)
+        std = np.sqrt(var + self.epsilon).reshape(1, -1, 1, 1)
+        x = (x - mean.reshape(1, -1, 1, 1)) / std
         x = x * weight.reshape(1, -1, 1, 1) + bias.reshape(1, -1, 1, 1)
         x = x.reshape(x_shape)
         self.top = [x]
@@ -56,7 +57,6 @@ class BatchNorm():
         self.top_grad = top_grad
         assert len(self.top_grad) == 1
         y_grad = self.top_grad[0]
-        assert len(y_grad.shape) == 2
         x = self.bottom[0]
         assert x.shape[1] == self.num_channel
         weight, bias = self.param
@@ -66,7 +66,8 @@ class BatchNorm():
         x_shape = x.shape
         shape = list(x_shape) + [1] * (4 - len(x_shape))
         x = x.reshape(shape)
-        x = (x - mean.reshape(1, -1, 1, 1)) / np.sqrt(var + self.epsilon).reshape(1, -1, 1, 1)
+        std = np.sqrt(var + self.epsilon).reshape(1, -1, 1, 1)
+        x = (x - mean.reshape(1, -1, 1, 1)) / std
         y_grad = y_grad.reshape(shape)
         weight_grad[...] = (y_grad * x).sum(axis=(0, 2, 3))
         bias_grad[...] = y_grad.sum(axis=(0, 2, 3))

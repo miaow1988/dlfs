@@ -12,10 +12,13 @@ from .relu import ReLU
 from .cross_entropy_loss import CrossEntropyLoss
 from .softmax_loss import SoftmaxLoss
 
+from .reshape import Reshape
+
 __all__ = [
     'check_parameter_gradient', 'check_bottom_gradient',
     'Linear', 'Conv',
     'BatchNorm',
     'Sigmoid', 'ReLU',
-    'CrossEntropyLoss', 'SoftmaxLoss'
+    'CrossEntropyLoss', 'SoftmaxLoss',
+    'Reshape',
 ]
