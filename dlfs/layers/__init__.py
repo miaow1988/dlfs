@@ -14,7 +14,7 @@ from .softmax_loss import SoftmaxLoss
 
 __all__ = [
     'check_parameter_gradient', 'check_bottom_gradient',
-    'Linear',
+    'Linear', 'Conv',
     'BatchNorm',
     'Sigmoid', 'ReLU',
     'CrossEntropyLoss', 'SoftmaxLoss'
