@@ -9,6 +9,7 @@ from __future__ import unicode_literals
 import itertools
 
 import numpy as np
+from .img2col import img2col
 
 
 def view_as_windows(arr_in, window_shape, step=1):
@@ -63,17 +64,8 @@ class Conv():
         weight, bias = self.param
         assert weight.shape[1] == x.shape[1]
 
-        x = np.pad(
-            x, ((0, 0), (0, 0), (self.padding, self.padding),
-                (self.padding, self.padding)),
-            mode='constant')
-        x_blocks = view_as_windows(
-            x, (x.shape[0], x.shape[1], self.kernel_size, self.kernel_size),
-            (1, 1, self.stride, self.stride))
-        x_blocks = x_blocks.reshape(x_blocks.shape[2], x_blocks.shape[3],
-                                    x_blocks.shape[4], -1)
-        y = x_blocks.dot(weight.reshape(self.num_output, -1).T) + bias.reshape(
-            1, 1, 1, self.num_output)
+        x_blocks = img2col(x, self.kernel_size, self.stride, self.padding)
+        y = x_blocks.dot(weight.reshape(self.num_output, -1).T) + bias
         y = y.transpose((2, 3, 0, 1))
         self.top = [y]
         return self.top
@@ -88,18 +80,13 @@ class Conv():
         weight, bias = self.param
         weight_grad, bias_grad = self.param_grad
 
-        # import ipdb; ipdb.set_trace()
+        batch_size = x.shape[0]
         x = np.pad(
             x, ((0, 0), (0, 0), (self.padding, self.padding),
                 (self.padding, self.padding)),
             mode='constant')
-        batch_size = x.shape[0]
-        x_blocks = view_as_windows(
-            x,
-            (batch_size, self.num_input, self.kernel_size, self.kernel_size),
-            (1, 1, self.stride, self.stride))
-        output_h, output_w = x_blocks.shape[2], x_blocks.shape[3]
-        x_blocks = x_blocks.reshape(output_h, output_w, batch_size, -1)
+        x_blocks = img2col(x, self.kernel_size, self.stride, 0)
+        output_h, output_w = x_blocks.shape[0], x_blocks.shape[1]
 
         x_blocks = x_blocks.reshape(-1, x_blocks.shape[3])
         y_grad_blocks = y_grad.transpose((2, 3, 0, 1)).reshape(
