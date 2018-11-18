@@ -11,8 +11,8 @@ import numpy as np
 from .img2cols import img2cols, reverse_img2cols
 
 
-class Conv():
-    def __init__(self, num_input, num_output, kernel_size, stride, padding):
+class AvgPool():
+    def __init__(self, kernel_size, stride, padding):
         self.bottom = None
         self.bottom_grad = None
         self.propagation = [True]
@@ -20,14 +20,9 @@ class Conv():
         self.top = None
         self.top_grad = None
 
-        weight = np.random.randn(num_output, num_input, kernel_size,
-                                 kernel_size)
-        bias = np.zeros(num_output)
-        self.param = [weight, bias]
+        self.param = []
         self.param_grad = [np.zeros(p.shape) for p in self.param]
 
-        self.num_input = num_input
-        self.num_output = num_output
         self.kernel_size = kernel_size
         self.stride = stride
         self.padding = padding
@@ -37,10 +32,8 @@ class Conv():
         assert len(self.bottom) == 1
         x = self.bottom[0]
         assert x.ndim == 4
-        weight, bias = self.param
-        assert weight.shape[1] == x.shape[1]
 
-        self.batch_size, _, self.input_h, self.input_w = x.shape
+        self.batch_size, self.num_input, self.input_h, self.input_w = x.shape
         self.output_h = (self.input_h + 2 * self.padding - self.kernel_size) // self.stride + 1
         self.output_w = (self.input_w + 2 * self.padding - self.kernel_size) // self.stride + 1
 
@@ -48,10 +41,7 @@ class Conv():
         self.x_shape[2] += 2 * self.padding
         self.x_shape[3] += 2 * self.padding
         self.x_blocks = img2cols(x, self.kernel_size, self.stride, self.padding)
-        self.x_blocks = self.x_blocks.reshape(
-            self.output_h, self.output_w, self.batch_size,
-            self.num_input * self.kernel_size * self.kernel_size)
-        y = self.x_blocks.dot(weight.reshape(self.num_output, -1).T) + bias
+        y = self.x_blocks.mean(axis=(4, 5))
         y = y.transpose((2, 3, 0, 1))
         self.top = [y]
         return self.top
@@ -63,17 +53,10 @@ class Conv():
         assert len(y_grad.shape) == 4
         x = self.bottom[0]
         assert len(x.shape) == 4
-        weight, bias = self.param
-        weight_grad, bias_grad = self.param_grad
 
-        self.x_blocks = self.x_blocks.reshape(
-            self.output_h * self.output_w * self.batch_size,
-            self.num_input * self.kernel_size * self.kernel_size)
-        y_grad_blocks = y_grad.transpose((2, 3, 0, 1)).reshape(-1, self.num_output)
-        weight_grad[...] = y_grad_blocks.T.dot(self.x_blocks).reshape(weight.shape)
-        bias_grad[...] = y_grad_blocks.sum(0)
-
-        x_grad_blocks = y_grad_blocks.dot(weight.reshape(self.num_output, -1))
+        k = self.kernel_size * self.kernel_size
+        x_grad_blocks = y_grad.transpose((2, 3, 0, 1))
+        x_grad_blocks = x_grad_blocks[:, :, :, :, None].repeat(k, axis=4) / k
         x_grad_blocks = x_grad_blocks.reshape(
             self.batch_size, self.output_h, self.output_w,
             self.num_input, self.kernel_size, self.kernel_size)
