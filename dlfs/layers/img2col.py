@@ -41,8 +41,8 @@ def img2col(img, kernel_size, stride, padding):
     col = view_as_windows(
         img, (img.shape[0], img.shape[1], kernel_size, kernel_size),
         (1, 1, stride, stride))
-    col = col.reshape(col.shape[2], col.shape[3], col.shape[4], -1)
-    # batch_size, output_h, output_w, num_input, kernel_size, kernel_size
+    col = col.squeeze((0, 1))
+    # output_h, output_w, batch_size, num_input, kernel_size, kernel_size
     return col
 
 
