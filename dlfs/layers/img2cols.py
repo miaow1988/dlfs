@@ -34,27 +34,28 @@ def view_as_windows(arr_in, window_shape, step=1):
     return arr_out
 
 
-def img2col(img, kernel_size, stride, padding):
+def img2cols(img, kernel_size, stride, padding):
     img = np.pad(
         img, ((0, 0), (0, 0), (padding, padding), (padding, padding)),
         mode='constant')
-    col = view_as_windows(
+    cols = view_as_windows(
         img, (img.shape[0], img.shape[1], kernel_size, kernel_size),
         (1, 1, stride, stride))
-    col = col.squeeze((0, 1))
+    cols = cols.squeeze((0, 1))
     # output_h, output_w, batch_size, num_input, kernel_size, kernel_size
-    return col
+    return cols
 
 
-def reverse_img2col(col, kernel_size, stride, padding):
-    col = col.reshape(batch_size, output_h, output_w, num_input, kernel_size,
-                      kernel_size)
-    x_grad = np.zeros(x.shape)
+def reverse_img2cols(img_shape, cols, kernel_size, stride, padding):
+    (batch_size, output_h, output_w, num_input,
+     kernel_size, kernel_size) = cols.shape
+    img = np.zeros(img_shape)
     for i, j in itertools.product(range(output_h), range(output_w)):
         i0 = i * stride
         i1 = i0 + kernel_size
         j0 = j * stride
         j1 = j0 + kernel_size
-        x_grad[:, :, i0:i1, j0:j1] += col[:, i, j, :, :, :]
+        img[:, :, i0:i1, j0:j1] += cols[:, i, j, :, :, :]
     if padding > 0:
-        x_grad = x_grad[:, :, padding:-padding, padding:-padding]
+        img = img[:, :, padding:-padding, padding:-padding]
+    return img

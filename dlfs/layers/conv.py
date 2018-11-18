@@ -6,10 +6,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import itertools
-
 import numpy as np
-from .img2col import img2col
+from .img2cols import img2cols, reverse_img2cols
 
 
 def view_as_windows(arr_in, window_shape, step=1):
@@ -71,7 +69,7 @@ class Conv():
         self.x_shape = list(x.shape)
         self.x_shape[2] += 2 * self.padding
         self.x_shape[3] += 2 * self.padding
-        self.x_blocks = img2col(x, self.kernel_size, self.stride, self.padding)
+        self.x_blocks = img2cols(x, self.kernel_size, self.stride, self.padding)
         self.x_blocks = self.x_blocks.reshape(
             self.output_h, self.output_w, self.batch_size,
             self.num_input * self.kernel_size * self.kernel_size)
@@ -101,15 +99,6 @@ class Conv():
         x_grad_blocks = x_grad_blocks.reshape(
             self.batch_size, self.output_h, self.output_w,
             self.num_input, self.kernel_size, self.kernel_size)
-        x_grad = np.zeros(self.x_shape)
-        for i, j in itertools.product(range(self.output_h), range(self.output_w)):
-            i0 = i * self.stride
-            i1 = i0 + self.kernel_size
-            j0 = j * self.stride
-            j1 = j0 + self.kernel_size
-            x_grad[:, :, i0:i1, j0:j1] += x_grad_blocks[:, i, j, :, :, :]
-        if self.padding > 0:
-            x_grad = x_grad[:, :, self.padding:-self.padding, self.
-                            padding:-self.padding]
+        x_grad = reverse_img2cols(self.x_shape, x_grad_blocks, self.kernel_size, self.stride, self.padding)
         self.bottom_grad = [x_grad]
         return self.bottom_grad
