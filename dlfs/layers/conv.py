@@ -64,8 +64,11 @@ class Conv():
         weight, bias = self.param
         assert weight.shape[1] == x.shape[1]
 
-        x_blocks = img2col(x, self.kernel_size, self.stride, self.padding)
-        y = x_blocks.dot(weight.reshape(self.num_output, -1).T) + bias
+        self.x_shape = list(x.shape)
+        self.x_shape[2] += 2 * self.padding
+        self.x_shape[3] += 2 * self.padding
+        self.x_blocks = img2col(x, self.kernel_size, self.stride, self.padding)
+        y = self.x_blocks.dot(weight.reshape(self.num_output, -1).T) + bias
         y = y.transpose((2, 3, 0, 1))
         self.top = [y]
         return self.top
@@ -81,23 +84,17 @@ class Conv():
         weight_grad, bias_grad = self.param_grad
 
         batch_size = x.shape[0]
-        x = np.pad(
-            x, ((0, 0), (0, 0), (self.padding, self.padding),
-                (self.padding, self.padding)),
-            mode='constant')
-        x_blocks = img2col(x, self.kernel_size, self.stride, 0)
-        output_h, output_w = x_blocks.shape[0], x_blocks.shape[1]
+        output_h, output_w = self.x_blocks.shape[0], self.x_blocks.shape[1]
 
-        x_blocks = x_blocks.reshape(-1, x_blocks.shape[3])
-        y_grad_blocks = y_grad.transpose((2, 3, 0, 1)).reshape(
-            -1, self.num_output)
+        x_blocks = self.x_blocks.reshape(-1, self.x_blocks.shape[3])
+        y_grad_blocks = y_grad.transpose((2, 3, 0, 1)).reshape(-1, self.num_output)
         weight_grad[...] = y_grad_blocks.T.dot(x_blocks).reshape(weight.shape)
         bias_grad[...] = y_grad_blocks.sum(0)
 
         t = y_grad_blocks.dot(weight.reshape(self.num_output, -1))
         t = t.reshape(batch_size, output_h, output_w, self.num_input,
                       self.kernel_size, self.kernel_size)
-        x_grad = np.zeros(x.shape)
+        x_grad = np.zeros(self.x_shape)
         for i, j in itertools.product(range(output_h), range(output_w)):
             i0 = i * self.stride
             i1 = i0 + self.kernel_size

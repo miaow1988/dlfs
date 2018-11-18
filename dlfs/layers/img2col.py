@@ -42,4 +42,19 @@ def img2col(img, kernel_size, stride, padding):
         img, (img.shape[0], img.shape[1], kernel_size, kernel_size),
         (1, 1, stride, stride))
     col = col.reshape(col.shape[2], col.shape[3], col.shape[4], -1)
+    # batch_size, output_h, output_w, num_input, kernel_size, kernel_size
     return col
+
+
+def reverse_img2col(col, kernel_size, stride, padding):
+    col = col.reshape(batch_size, output_h, output_w, num_input, kernel_size,
+                      kernel_size)
+    x_grad = np.zeros(x.shape)
+    for i, j in itertools.product(range(output_h), range(output_w)):
+        i0 = i * stride
+        i1 = i0 + kernel_size
+        j0 = j * stride
+        j1 = j0 + kernel_size
+        x_grad[:, :, i0:i1, j0:j1] += col[:, i, j, :, :, :]
+    if padding > 0:
+        x_grad = x_grad[:, :, padding:-padding, padding:-padding]
