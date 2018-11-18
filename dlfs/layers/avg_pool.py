@@ -58,8 +58,9 @@ class AvgPool():
         x_grad_blocks = y_grad.transpose((2, 3, 0, 1))
         x_grad_blocks = x_grad_blocks[:, :, :, :, None].repeat(k, axis=4) / k
         x_grad_blocks = x_grad_blocks.reshape(
-            self.batch_size, self.output_h, self.output_w,
+            self.output_h, self.output_w, self.batch_size,
             self.num_input, self.kernel_size, self.kernel_size)
+        x_grad_blocks = x_grad_blocks.transpose(2, 0, 1, 3, 4, 5)
         x_grad = reverse_img2cols(
             self.x_shape, x_grad_blocks,
             self.kernel_size, self.stride, self.padding)
