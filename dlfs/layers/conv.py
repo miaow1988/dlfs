@@ -73,9 +73,10 @@ class Conv():
         weight_grad[...] = y_grad_blocks.T.dot(self.x_blocks).reshape(weight.shape)
         bias_grad[...] = y_grad_blocks.sum(0)
 
+        # import ipdb; ipdb.set_trace()
         x_grad_blocks = y_grad_blocks.dot(weight.reshape(self.num_output, -1))
         x_grad_blocks = x_grad_blocks.reshape(
-            self.batch_size, self.output_h, self.output_w,
+            self.output_h, self.output_w, self.batch_size,
             self.num_input, self.kernel_size, self.kernel_size)
         x_grad = reverse_img2cols(
             self.x_shape, x_grad_blocks,

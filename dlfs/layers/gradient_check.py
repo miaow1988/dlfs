@@ -24,7 +24,7 @@ def check_parameter_gradient(layer, index, bottom, top_grad):
         p.reshape(-1)[j] += epsilon
         top_ = layer.forward(bottom)
         layer.backward(top_grad)
-        p_grad_.reshape(-1)[j] = (top_[0].sum() - top[0].sum()) / epsilon
+        p_grad_.reshape(-1)[j] = ((top_[0] * top_grad[0]).sum() - (top[0] * top_grad[0]).sum()) / epsilon
     p[...] = p_backup
     diff = np.abs(p_grad_ - p_grad).mean() / np.abs(p_grad).mean()
     return diff
@@ -42,7 +42,7 @@ def check_bottom_gradient(layer, index, bottom, top_grad):
         x.reshape(-1)[j] += epsilon
         top_ = layer.forward(bottom)
         layer.backward(top_grad)
-        x_grad_.reshape(-1)[j] = (top_[0].sum() - top[0].sum()) / epsilon
+        x_grad_.reshape(-1)[j] = ((top_[0] * top_grad[0]).sum() - (top[0] * top_grad[0]).sum()) / epsilon
     x[...] = x_backup
     diff = np.abs(x_grad_ - x_grad).mean() / np.abs(x_grad).mean()
     return diff

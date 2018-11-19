@@ -19,7 +19,7 @@ class TestReLU(unittest.TestCase):
     layer = dlfs.layers.ReLU()
     bottom = [np.random.randn(2, 3)]
     top = layer.forward(bottom)
-    top_grad = [np.ones(t.shape) for t in top]
+    top_grad = [np.random.rand(*t.shape) for t in top]
 
     def test_backward_param(self):
         for i in range(len(self.layer.param)):

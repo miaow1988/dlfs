@@ -35,6 +35,9 @@ def view_as_windows(arr_in, window_shape, step=1):
 
 
 def img2cols(img, kernel_size, stride, padding):
+    '''
+    output_h, output_w, batch_size, num_input, kernel_size, kernel_size
+    '''
     img = np.pad(
         img, ((0, 0), (0, 0), (padding, padding), (padding, padding)),
         mode='constant')
@@ -47,15 +50,18 @@ def img2cols(img, kernel_size, stride, padding):
 
 
 def reverse_img2cols(img_shape, cols, kernel_size, stride, padding):
-    (batch_size, output_h, output_w, num_input,
-     kernel_size, kernel_size) = cols.shape
+    '''
+    output_h, output_w, batch_size, num_input, kernel_size, kernel_size
+    '''
+    (output_h, output_w, batch_size,
+     num_input, kernel_size, kernel_size) = cols.shape
     img = np.zeros(img_shape)
     for i, j in itertools.product(range(output_h), range(output_w)):
         i0 = i * stride
         i1 = i0 + kernel_size
         j0 = j * stride
         j1 = j0 + kernel_size
-        img[:, :, i0:i1, j0:j1] += cols[:, i, j, :, :, :]
+        img[:, :, i0:i1, j0:j1] += cols[i, j, :, :, :, :]
     if padding > 0:
         img = img[:, :, padding:-padding, padding:-padding]
     return img
