@@ -5,6 +5,7 @@ from .linear import Linear
 from .conv import Conv
 
 from .avg_pool import AvgPool
+from .max_pool import MaxPool
 
 from .batch_norm import BatchNorm
 
@@ -19,7 +20,7 @@ from .reshape import Reshape
 __all__ = [
     'check_parameter_gradient', 'check_bottom_gradient',
     'Linear', 'Conv',
-    'AvgPool',
+    'AvgPool', 'MaxPool',
     'BatchNorm',
     'Sigmoid', 'ReLU',
     'CrossEntropyLoss', 'SoftmaxLoss',
